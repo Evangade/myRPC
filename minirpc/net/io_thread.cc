@@ -53,13 +53,13 @@ namespace minirpc
 
         // 让IO 线程等待，直到我们主动的启动
 
-        DEBUGLOG("IOThread %d created, wait start semaphore", thread->m_thread_id);
+        //        DEBUGLOG("IOThread %d created, wait start semaphore", thread->m_thread_id);
 
         sem_wait(&thread->m_start_semaphore);
-        DEBUGLOG("IOThread %d start loop ", thread->m_thread_id);
+        //      DEBUGLOG("IOThread %d start loop ", thread->m_thread_id);
         thread->m_event_loop->loop();
 
-        DEBUGLOG("IOThread %d end loop ", thread->m_thread_id);
+        //    DEBUGLOG("IOThread %d end loop ", thread->m_thread_id);
 
         return NULL;
     }

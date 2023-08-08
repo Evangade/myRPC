@@ -15,3 +15,9 @@ cc_binary(
     srcs = ["testeventloop.cc"],
     deps = ["@minirpc//minirpc/comm", "@minirpc//minirpc/net"],
 )
+cc_binary(
+    name = "test_tcp",
+    srcs = ["test_tcp.cc"],
+    deps = ["@minirpc//minirpc/comm", "@minirpc//minirpc/net", "@minirpc//minirpc/net/tcp"],
+)
+

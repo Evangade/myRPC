@@ -18,7 +18,7 @@ namespace minirpc
 
         std::pair<int, NetAddr::s_ptr> accept();
 
-        int getListenFd();
+        int getListenFd(); // 监听套接字
 
     private:
         NetAddr::s_ptr m_local_addr; // 服务端监听的地址，addr -> ip:port

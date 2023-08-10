@@ -1,5 +1,5 @@
-#ifndef ROCKET_NET_FD_EVENT_GROUP_H
-#define ROCKET_NET_FD_EVENT_GROUP_H
+#ifndef MINIRPC_NET_FD_EVENT_GROUP_H
+#define MINIRPC_NET_FD_EVENT_GROUP_H
 
 #include <vector>
 #include "minirpc/comm/mutex.h"
@@ -15,7 +15,7 @@ namespace minirpc
         FdEventGroup(int size);
 
         ~FdEventGroup();
-        FdEvent *getFdEvent(int fd);
+        FdEvent *getFdEvent(int fd); // 获取关联的FdEvent
 
     public:
         static FdEventGroup *GetFdEventGroup();

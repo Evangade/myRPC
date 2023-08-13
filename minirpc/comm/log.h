@@ -6,13 +6,14 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
-#include <pthread.h>
 #include <unistd.h>
 #include <memory>
 #include <vector>
 #include <queue>
 #include <semaphore.h>
-#include "mutex.h"
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 namespace minirpc
 {
     enum LogLevel
@@ -95,7 +96,8 @@ namespace minirpc
         static void *Loop(void *);
 
     public:
-        pthread_t m_thread;
+        // pthread_t m_thread;
+        std::thread m_thread;
 
     private:
         // m_file_path/m_file_name_yyyymmdd.0
@@ -108,8 +110,8 @@ namespace minirpc
 
         sem_t m_sempahore;
 
-        pthread_cond_t m_condtion; // 条件变量
-        Mutex m_mutex;
+        std::condition_variable m_condtion; // 条件变量
+        std::mutex m_mut;
 
         std::string m_date;         // 当前打印日志的文件日期
         FILE *m_file_hanlder{NULL}; // 当前打开的日志文件句柄
@@ -166,9 +168,9 @@ namespace minirpc
 
         std::vector<std::string> m_app_buffer;
 
-        Mutex m_mutex;
+        std::mutex m_mut;
 
-        Mutex m_app_mutex;
+        std::mutex m_app_mut;
 
         // m_file_path/m_file_name_yyyymmdd.1
 

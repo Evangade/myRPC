@@ -1,102 +1,59 @@
 #include "minirpc/comm/log.h"
-#include <string>
+#include <functional>
 #include <iostream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 using namespace std;
-class Solution
+class Foo
 {
-    string name[20] = {"", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"};
-    string teen_name[20] = {"Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
-    string decimal_name[20] = {"", "Ten", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"};
-    string carry_name[5] = {"Thousand", "Million", "Billion"};
-    string hundred_name = "hundred";
+private:
+    int curr_num;
+    std::mutex mut;
+    std::condition_variable data_cond_1, data_cond_2;
 
 public:
-    string numberToWords(int num)
+    Foo() : curr_num(0)
     {
-        string ans;
-
-        if (num == 0)
-        {
-            return "Zero";
-        }
-        if (num < 1000)
-        {
-            ans += hundredToWords(num);
-        }
-        else if (num >= 1000 && num < 1000000)
-        {
-            ans = hundredToWords(num / 1000) + " " + carry_name[0] + hundredToWords(num % 1000);
-        }
-        else if (num >= 1000000 && num < 1000000000)
-        {
-            ans = hundredToWords(num / 1000000) + " " + carry_name[1];
-            if ((num / 1000) % 1000 != 0)
-            {
-                ans = ans + hundredToWords((num / 1000) % 1000) + " " + carry_name[0];
-            }
-            ans = ans + hundredToWords(num % 1000);
-        }
-        else if (num >= 1000000000)
-        {
-            ans = hundredToWords(num / 1000000000) + " " + carry_name[2];
-
-            if ((num / 1000000) % 1000 != 0)
-            {
-                ans = ans + hundredToWords((num / 1000000) % 1000) + " " + carry_name[1];
-            }
-            if ((num / 1000) % 1000 != 0)
-            {
-                ans = ans + hundredToWords((num / 1000) % 1000) + " " + carry_name[0];
-            }
-            ans = ans + hundredToWords(num % 1000);
-        }
-        else
-            return "Error";
-        if (!ans.empty() && ans[0] == ' ')
-        {
-            return ans.substr(1);
-        }
-        else
-            return ans + "??";
     }
-    string hundredToWords(int num)
+
+    void first(function<void()> printFirst)
     {
-        string s;
-        if (num >= 1000)
-        {
-            return "Error Call\n";
-        }
-        if (num / 100 >= 1)
-        {
-            s = s + " " + name[num / 100] + " Hundred"; // 百位
-        }
-        if (num % 100 >= 1)
-        {
-            int midnum = (num % 100) / 10;
-            if (midnum == 1)
-            {
-                s = s + " " + teen_name[num % 10]; // 十位
-            }
-            else
-            {
-                if (midnum >= 2)
-                {
-                    s = s + " " + decimal_name[midnum]; // 十位
-                }
-                if (num % 10 > 0)
-                {
-                    s = s + " " + name[num % 10]; // 个位
-                }
-            }
-        }
-        return s;
+        std::unique_lock<std::mutex> lk(mut);
+        // printFirst() outputs "first". Do not change or remove this line.
+        printFirst();
+        lk.unlock();
+        curr_num = 1;
+        data_cond_1.notify_one();
+    }
+
+    void second(function<void()> printSecond)
+    {
+        std::unique_lock<std::mutex> lk(mut);
+        data_cond_1.wait(lk, [&]
+                         { return curr_num == 1; });
+        // printSecond() outputs "second". Do not change or remove this line.
+        printSecond();
+        lk.unlock();
+        curr_num = 2;
+        data_cond_2.notify_one();
+    }
+
+    void third(function<void()> printThird)
+    {
+        std::unique_lock<std::mutex> lk(mut);
+        data_cond_2.wait(lk, [&]
+                         { return curr_num == 2; });
+        // printThird() outputs "third". Do not change or remove this line.
+        printThird();
+        lk.unlock();
+        curr_num = 3;
     }
 };
 int main()
 {
-    Solution s;
+    // Solution s;
     int num;
     cin >> num;
-    cout << s.numberToWords(num) << endl;
     return 0;
 }

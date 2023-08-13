@@ -17,8 +17,8 @@ namespace minirpc
         rt = sem_init(&m_start_semaphore, 0, 0);
         assert(rt == 0);
 
-        pthread_create(&m_thread, NULL, &IOThread::Main, this);
-
+        // pthread_create(&m_thread, NULL, &IOThread::Main, this);
+        m_thread = std::move(std::thread(Main, this));
         // wait, 直到新线程执行完 Main 函数的前置（loop之前的内容）
         sem_wait(&m_init_semaphore);
 
@@ -32,7 +32,10 @@ namespace minirpc
         sem_destroy(&m_init_semaphore);
         sem_destroy(&m_start_semaphore);
 
-        pthread_join(m_thread, NULL);
+        if (m_thread.joinable())
+        {
+            m_thread.join();
+        }
 
         if (m_event_loop)
         {
@@ -41,7 +44,7 @@ namespace minirpc
         }
     }
 
-    void *IOThread::Main(void *arg)
+    void IOThread::Main(void *arg)
     {
         IOThread *thread = static_cast<IOThread *>(arg);
 
@@ -53,15 +56,15 @@ namespace minirpc
 
         // 让IO 线程等待，直到我们主动的启动
 
-        //        DEBUGLOG("IOThread %d created, wait start semaphore", thread->m_thread_id);
+        DEBUGLOG("IOThread %d created, wait start semaphore", thread->m_thread_id);
 
         sem_wait(&thread->m_start_semaphore);
-        //      DEBUGLOG("IOThread %d start loop ", thread->m_thread_id);
+        DEBUGLOG("IOThread %d start loop ", thread->m_thread_id);
         thread->m_event_loop->loop();
 
-        //    DEBUGLOG("IOThread %d end loop ", thread->m_thread_id);
+        DEBUGLOG("IOThread %d end loop ", thread->m_thread_id);
 
-        return NULL;
+        return;
     }
 
     EventLoop *IOThread::getEventLoop()
@@ -77,7 +80,10 @@ namespace minirpc
 
     void IOThread::join()
     {
-        pthread_join(m_thread, NULL);
+        if (m_thread.joinable())
+        {
+            m_thread.join();
+        }
     }
 
 }

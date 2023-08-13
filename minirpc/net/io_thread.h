@@ -1,9 +1,8 @@
 #ifndef MINIRPC_NET_IO_THREAD_H
 #define MINIRPC_NET_IO_THREAD_H
 
-#include <pthread.h>
 #include <semaphore.h>
-
+#include <thread>
 namespace minirpc
 {
 
@@ -22,11 +21,15 @@ namespace minirpc
 
     public:
         // 必须是静态函数
-        static void *Main(void *arg);
+        static void Main(void *arg);
 
     private:
+        // pid_t m_thread_id{-1};
+        // pthread_t m_thread{0};
+
         pid_t m_thread_id{-1}; // 线程号
-        pthread_t m_thread{0}; // 线程句柄
+
+        std::thread m_thread; // 线程句柄
 
         class EventLoop *m_event_loop{NULL}; // 当前 io 线程的 loop 对象
         // 使用信号量进行同步

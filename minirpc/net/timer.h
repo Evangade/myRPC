@@ -5,7 +5,7 @@
 #include "minirpc/comm/mutex.h"
 #include "minirpc/net/fd_event.h"
 #include "minirpc/net/timer_event.h"
-
+#include <mutex>
 namespace minirpc
 {
 
@@ -27,7 +27,7 @@ namespace minirpc
 
     private:
         std::multimap<int64_t, TimerEvent::s_ptr> m_pending_events;
-        Mutex m_mutex;
+        std::mutex m_mut;
     };
 
 }

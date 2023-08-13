@@ -38,7 +38,7 @@ namespace minirpc
         std::vector<TimerEvent::s_ptr> tmps;
         std::vector<std::pair<int64_t, std::function<void()>>> tasks;
 
-        ScopeMutex<Mutex> lock(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mut);
         auto it = m_pending_events.begin();
 
         for (it = m_pending_events.begin(); it != m_pending_events.end(); ++it)
@@ -84,7 +84,8 @@ namespace minirpc
 
     void Timer::resetArriveTime() // 重置到达时间
     {
-        ScopeMutex<Mutex> lock(m_mutex);
+
+        std::unique_lock<std::mutex> lock(m_mut);
         auto tmp = m_pending_events;
         lock.unlock();
 
@@ -127,7 +128,7 @@ namespace minirpc
     {
         bool is_reset_timerfd = false;
 
-        ScopeMutex<Mutex> lock(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mut);
         if (m_pending_events.empty())
         {
             is_reset_timerfd = true;
@@ -153,7 +154,7 @@ namespace minirpc
     {
         event->setCancled(true);
 
-        ScopeMutex<Mutex> lock(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mut);
 
         auto begin = m_pending_events.lower_bound(event->getArriveTime());
         auto end = m_pending_events.upper_bound(event->getArriveTime());

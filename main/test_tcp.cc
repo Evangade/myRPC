@@ -7,7 +7,7 @@
 void test_tcp_server()
 {
 
-    minirpc::IPNetAddr::s_ptr addr = std::make_shared<minirpc::IPNetAddr>("127.0.0.1", 12346);
+    minirpc::IPNetAddr::s_ptr addr = std::make_shared<minirpc::IPNetAddr>("127.0.0.1", minirpc::Config::GetGlobalConfig()->m_port);
 
     DEBUGLOG("create addr %s", addr->toString().c_str());
 

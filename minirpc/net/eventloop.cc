@@ -109,9 +109,11 @@ namespace minirpc
         while (!m_stop_flag)
         {
             std::queue<std::function<void()>> tmp_task;
-            ScopeMutex<Mutex> lock(m_mutex);
-            m_pending_tasks.swap(tmp_task);
-            lock.unlock();
+
+            {
+                std::lock_guard<std::mutex> lock(m_mut);
+                m_pending_tasks.swap(tmp_task);
+            }
             while (!tmp_task.empty())
             {
                 std::function<void()> cb = tmp_task.front();
@@ -206,9 +208,11 @@ namespace minirpc
     }
     void EventLoop::addTask(std::function<void()> cb, bool is_wake_up)
     {
-        ScopeMutex<Mutex> lock(m_mutex);
-        m_pending_tasks.push(cb);
-        lock.unlock();
+
+        {
+            std::lock_guard<std::mutex> lock(m_mut);
+            m_pending_tasks.push(cb);
+        }
 
         if (is_wake_up)
         {

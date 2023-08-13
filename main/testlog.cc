@@ -1,8 +1,8 @@
-#include <pthread.h>
+#include <thread>
 #include "minirpc/comm/log.h"
 #include "minirpc/comm/config.h"
 // using namespace minirpc;
-void *fun(void *)
+void fun()
 {
 
     int i = 20;
@@ -12,23 +12,22 @@ void *fun(void *)
         INFOLOG("info this is thread in %s", "fun");
     }
 
-    return NULL;
+    return;
 }
 int main(int argc, const char **argv)
 {
     minirpc::Config::SetGlobalConfig("./conf/rocket.xml");
     minirpc::Logger::InitGlobalLogger();
 
-    pthread_t thread;
-    pthread_create(&thread, NULL, &fun, NULL);
+    std::thread t(fun);
 
     int i = 20;
     while (i--)
     {
-        DEBUGLOG("test debug log %s", "11");
-        INFOLOG("test info log %s", "11");
+        DEBUGLOG("test debug log %s", "10");
+        INFOLOG("test info log %s", "10");
     }
 
-    pthread_join(thread, NULL);
+    t.join();
     return 0;
 }

@@ -40,13 +40,13 @@ namespace minirpc
 
     FdEvent *FdEventGroup::getFdEvent(int fd)
     {
-        ScopeMutex<Mutex> lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_mut);
         if ((size_t)fd < m_fd_group.size())
         {
             return m_fd_group[fd];
         }
 
-        int new_size = int(fd * 1.5);
+        int new_size = static_cast<int>(fd * 1.5);
         for (int i = m_fd_group.size(); i < new_size; ++i)
         {
             m_fd_group.push_back(new FdEvent(i));

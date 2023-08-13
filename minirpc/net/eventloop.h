@@ -5,7 +5,7 @@
 #include <set>
 #include <functional>
 #include <queue>
-#include "minirpc/comm/mutex.h"
+#include <mutex>
 #include "minirpc/net/timer_event.h"
 namespace minirpc
 {
@@ -58,8 +58,8 @@ namespace minirpc
         std::set<int> m_listen_fds;
 
         std::queue<std::function<void()>> m_pending_tasks;
-        Mutex m_mutex;
 
+        std::mutex m_mut;
         bool m_is_looping{false};
 
         class Timer *m_timer{NULL};

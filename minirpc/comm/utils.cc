@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <thread>
 #include "utils.h"
 
 namespace minirpc
@@ -11,7 +12,7 @@ namespace minirpc
 
     static int g_pid = 0;
 
-    static thread_local int t_thread_id = 0;
+    static thread_local pid_t t_thread_id;
 
     pid_t getPid()
     {

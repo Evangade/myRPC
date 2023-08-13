@@ -2,6 +2,7 @@
 #define MINIRPC_NET_FD_EVENT_GROUP_H
 
 #include <vector>
+#include <mutex>
 #include "minirpc/comm/mutex.h"
 #include "minirpc/net/fd_event.h"
 
@@ -23,7 +24,7 @@ namespace minirpc
     private:
         int m_size{0};
         std::vector<FdEvent *> m_fd_group;
-        Mutex m_mutex;
+        std::mutex m_mut;
     };
 
 }

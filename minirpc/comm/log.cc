@@ -91,8 +91,8 @@ namespace minirpc
     {
 
         sem_init(&m_sempahore, 0, 0);
-
-        assert(pthread_create(&m_thread, NULL, &AsyncLogger::Loop, this) == 0);
+        m_thread = std::move(std::thread(AsyncLogger::Loop, this));
+        // assert(pthread_create(&m_thread, NULL, &AsyncLogger::Loop, this) == 0);
 
         // assert(pthread_cond_init(&m_condtion, NULL) == 0);
 
@@ -105,17 +105,17 @@ namespace minirpc
 
         AsyncLogger *logger = reinterpret_cast<AsyncLogger *>(arg);
 
-        assert(pthread_cond_init(&logger->m_condtion, NULL) == 0);
+        // assert(pthread_cond_init(&logger->m_condtion, NULL) == 0);
 
         sem_post(&logger->m_sempahore);
 
         while (1)
         {
-            ScopeMutex<Mutex> lock(logger->m_mutex);
+            std::unique_lock<std::mutex> lock(logger->m_mut);
             while (logger->m_buffer.empty())
             {
                 // printf("begin pthread_cond_wait back \n");
-                pthread_cond_wait(&(logger->m_condtion), logger->m_mutex.getMutex());
+                logger->m_condtion.wait(lock);
             }
             // printf("pthread_cond_wait back \n");
 
@@ -203,9 +203,9 @@ namespace minirpc
 
     void AsyncLogger::pushLogBuffer(std::vector<std::string> &vec)
     {
-        ScopeMutex<Mutex> lock(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mut);
         m_buffer.push(vec);
-        pthread_cond_signal(&m_condtion);
+        m_condtion.notify_one();
 
         lock.unlock();
 
@@ -218,7 +218,7 @@ namespace minirpc
         // 同步 m_buffer 到 async_logger 的buffer队尾
         // printf("sync to async logger\n");
         std::vector<std::string> tmp_vec;
-        ScopeMutex<Mutex> lock(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mut);
         tmp_vec.swap(m_buffer);
         lock.unlock();
 
@@ -230,7 +230,7 @@ namespace minirpc
 
         // 同步 m_app_buffer 到 app_async_logger 的buffer队尾
         std::vector<std::string> tmp_vec2;
-        ScopeMutex<Mutex> lock2(m_app_mutex);
+        std::unique_lock<std::mutex> lock2(m_app_mut);
         tmp_vec2.swap(m_app_buffer);
         lock.unlock();
 
@@ -288,13 +288,13 @@ namespace minirpc
             printf((msg + "\n").c_str());
             return;
         }
-        ScopeMutex<Mutex> lock(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mut);
         m_buffer.push_back(msg);
         lock.unlock();
     }
     void Logger::pushAppLog(const std::string &msg)
     {
-        ScopeMutex<Mutex> lock(m_app_mutex);
+        std::unique_lock<std::mutex> lock(m_app_mut);
         m_app_buffer.push_back(msg);
         lock.unlock();
     }

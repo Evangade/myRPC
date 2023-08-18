@@ -5,55 +5,62 @@
 #include <mutex>
 #include <condition_variable>
 using namespace std;
-class Foo
+class FooBar
 {
 private:
-    int curr_num;
-    std::mutex mut;
-    std::condition_variable data_cond_1, data_cond_2;
+    int n;
+    condition_variable cv;
+    mutex mut;
+    bool turn = false;
 
 public:
-    Foo() : curr_num(0)
+    FooBar(int n)
     {
+        this->n = n;
     }
 
-    void first(function<void()> printFirst)
+    void foo(function<void()> printFoo)
     {
-        std::unique_lock<std::mutex> lk(mut);
-        // printFirst() outputs "first". Do not change or remove this line.
-        printFirst();
-        lk.unlock();
-        curr_num = 1;
-        data_cond_1.notify_one();
+
+        for (int i = 0; i < n; i++)
+        {
+            unique_lock<mutex> lk(mut);
+            cv.wait(lk, [&]
+                    { return !turn; });
+            // printFoo() outputs "foo". Do not change or remove this line.
+            printFoo();
+            turn = true;
+            lk.unlock();
+            cv.notify_one();
+        }
     }
 
-    void second(function<void()> printSecond)
+    void bar(function<void()> printBar)
     {
-        std::unique_lock<std::mutex> lk(mut);
-        data_cond_1.wait(lk, [&]
-                         { return curr_num == 1; });
-        // printSecond() outputs "second". Do not change or remove this line.
-        printSecond();
-        lk.unlock();
-        curr_num = 2;
-        data_cond_2.notify_one();
-    }
 
-    void third(function<void()> printThird)
-    {
-        std::unique_lock<std::mutex> lk(mut);
-        data_cond_2.wait(lk, [&]
-                         { return curr_num == 2; });
-        // printThird() outputs "third". Do not change or remove this line.
-        printThird();
-        lk.unlock();
-        curr_num = 3;
+        for (int i = 0; i < n; i++)
+        {
+            unique_lock<mutex> lk(mut);
+            cv.wait(lk, [&]
+                    { return turn; });
+            // printBar() outputs "bar". Do not change or remove this line.
+            printBar();
+            turn = false;
+            lk.unlock();
+            cv.notify_one();
+        }
     }
 };
 int main()
 {
-    // Solution s;
-    int num;
-    cin >> num;
+    int n = 3;
+    FooBar s(n);
+    cout << "out:\n";
+    thread t1(&FooBar::foo, &s, []
+              { cout << "foo"; });
+    thread t2(&FooBar::bar, &s, []
+              { cout << "bar"; });
+    t1.join();
+    t2.join();
     return 0;
 }

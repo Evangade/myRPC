@@ -5,10 +5,10 @@
 #include <map>
 #include <queue>
 #include "minirpc/net/tcp/net_addr.h"
-#include "minirpc/net/tcp/tcp_buffer.h"
+#include "minirpc/comm/tcp_buffer.h"
 #include "minirpc/net/io_thread.h"
 #include "minirpc/net/eventloop.h"
-// #include "minirpc/net/coder/abstract_coder.h"
+#include "minirpc/net/codec/abstract_codec.h"
 // #include "minirpc/net/rpc/rpc_dispatcher.h"
 
 namespace minirpc
@@ -63,15 +63,15 @@ namespace minirpc
         // 启动监听可读事件
         void listenRead();
 
-        // void pushSendMessage(AbstractProtocol::s_ptr message, std::function<void(AbstractProtocol::s_ptr)> done);
+        void pushSendMessage(AbstractProtocol::s_ptr message, std::function<void(AbstractProtocol::s_ptr)> done);
 
-        // void pushReadMessage(const std::string &msg_id, std::function<void(AbstractProtocol::s_ptr)> done);
+        void pushReadMessage(const std::string &msg_id, std::function<void(AbstractProtocol::s_ptr)> done);
 
         NetAddr::s_ptr getLocalAddr();
 
         NetAddr::s_ptr getPeerAddr();
 
-        // void reply(std::vector<AbstractProtocol::s_ptr> &replay_messages);
+        void reply(std::vector<AbstractProtocol::s_ptr> &replay_messages);
 
     private:
         EventLoop *m_event_loop{NULL}; // 代表持有该连接的 IO 线程
@@ -84,7 +84,7 @@ namespace minirpc
 
         class FdEvent *m_fd_event{NULL};
 
-        AbstractCoder *m_coder{NULL};
+        AbstractCodec *m_codec{NULL};
 
         TcpState m_state;
 
@@ -92,11 +92,10 @@ namespace minirpc
 
         TcpConnectionType m_connection_type{TcpConnectionByServer};
 
-        // std::pair<AbstractProtocol::s_ptr, std::function<void(AbstractProtocol::s_ptr)>>
-        // std::vector<std::pair<AbstractProtocol::s_ptr, std::function<void(AbstractProtocol::s_ptr)>>> m_write_dones;
+        std::vector<std::pair<AbstractProtocol::s_ptr, std::function<void(AbstractProtocol::s_ptr)>>> m_write_dones;
 
         // key 为 msg_id
-        // std::map<std::string, std::function<void(AbstractProtocol::s_ptr)>> m_read_dones;
+        std::map<std::string, std::function<void(AbstractProtocol::s_ptr)>> m_read_dones;
     };
 
 }

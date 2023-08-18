@@ -3,6 +3,7 @@
 
 #include <set>
 #include "minirpc/net/tcp/tcp_accepter.h"
+#include "minirpc/net/tcp/tcp_connection.h"
 #include "minirpc/net/tcp/net_addr.h"
 #include "minirpc/net/eventloop.h"
 #include "minirpc/net/io_thread_group.h"
@@ -41,7 +42,7 @@ namespace minirpc
 
         int m_client_counts{0};
 
-        // std::set<TcpConnection::s_ptr> m_client;
+        std::set<TcpConnection::s_ptr> m_client;
 
         TimerEvent::s_ptr m_clear_client_timer_event;
     };

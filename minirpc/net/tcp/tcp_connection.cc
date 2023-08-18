@@ -2,8 +2,8 @@
 #include "minirpc/comm/log.h"
 #include "minirpc/net/fd_event_group.h"
 #include "minirpc/net/tcp/tcp_connection.h"
-#include "minirpc/net/coder/string_coder.h"
-#include "minirpc/net/coder/tinypb_coder.h"
+#include "minirpc/net/codec/string_codec.h"
+#include "minirpc/net/codec/tinypb_codec.h"
 
 namespace minirpc
 {
@@ -18,7 +18,7 @@ namespace minirpc
         m_fd_event = FdEventGroup::GetFdEventGroup()->getFdEvent(fd);
         m_fd_event->setNonBlock();
 
-        // m_coder = new TinyPBCoder();
+        m_codec = new TinyPBCodec();
 
         if (m_connection_type == TcpConnectionByServer)
         {
@@ -29,10 +29,10 @@ namespace minirpc
     TcpConnection::~TcpConnection()
     {
         DEBUGLOG("~TcpConnection");
-        if (m_coder)
+        if (m_codec)
         {
-            delete m_coder;
-            m_coder = NULL;
+            delete m_codec;
+            m_codec = NULL;
         }
     }
 
@@ -100,14 +100,73 @@ namespace minirpc
         // TODO: 简单的 echo, 后面补充 RPC 协议解析
         excute();
     }
+    // 临时echo
+    void TcpConnection::excute()
+    {
+        std::vector<char> tmp;
+        int size = m_in_buffer->readAble();
+        tmp.resize(size);
+        m_in_buffer->readFromBuffer(tmp, size);
+        std::string msg;
+        for (auto i : tmp)
+        {
+            msg += i;
+        }
+        INFOLOG("success get request[%s] from client[%s]", msg.c_str(), m_peer_addr->toString().c_str());
+        m_out_buffer->writeToBuffer(msg.c_str(), msg.size());
 
+        listenWrite();
+    }
+    void TcpConnection::onWrite()
+    {
+        if (m_state != Connected)
+        {
+            ERRORLOG("onWrite error, client has already disconneced, addr[%s], clientfd[%d]", m_peer_addr->toString().c_str(), m_fd);
+            return;
+        }
+        bool is_write_all = false;
+        DEBUGLOG("WRITING TO CLIENT.");
+        while (true)
+        {
+            if (m_out_buffer->readAble() == 0)
+            {
+                DEBUGLOG("no data need to send to client [%s]", m_peer_addr->toString().c_str());
+                is_write_all = true;
+                break;
+            }
+            int write_size = m_out_buffer->readAble();
+            int read_index = m_out_buffer->readIndex();
+
+            int rt = write(m_fd, &(m_out_buffer->m_buffer[read_index]), write_size);
+
+            if (rt >= write_size)
+            {
+                DEBUGLOG("no data need to send to client [%s]", m_peer_addr->toString().c_str());
+                is_write_all = true;
+                break;
+            }
+            if (rt == -1 && errno == EAGAIN)
+            {
+                // 发送缓冲区已满，不能再发送了。
+                // 这种情况我们等下次 fd 可写的时候再次发送数据即可
+                ERRORLOG("write data error, errno==EAGIN and rt == -1");
+                break;
+            }
+        }
+        if (is_write_all)
+        {
+            m_fd_event->cancle(FdEvent::OUT_EVENT);
+            m_event_loop->addEpollEvent(m_fd_event);
+        }
+    }
+    /*
     void TcpConnection::excute()
     {
         if (m_connection_type == TcpConnectionByServer)
         {
             // 将 RPC 请求执行业务逻辑，获取 RPC 响应, 再把 RPC 响应发送回去
             std::vector<AbstractProtocol::s_ptr> result;
-            m_coder->decode(result, m_in_buffer);
+            m_codec->decode(result, m_in_buffer);
             for (size_t i = 0; i < result.size(); ++i)
             {
                 // 1. 针对每一个请求，调用 rpc 方法，获取响应 message
@@ -115,17 +174,17 @@ namespace minirpc
                 INFOLOG("success get request[%s] from client[%s]", result[i]->m_msg_id.c_str(), m_peer_addr->toString().c_str());
 
                 std::shared_ptr<TinyPBProtocol> message = std::make_shared<TinyPBProtocol>();
-                // message->m_pb_data = "hello. this is minirpc rpc test data";
-                // message->m_msg_id = result[i]->m_msg_id;
+                message->m_pb_data = "hello. this is minirpc rpc test data";
+                message->m_msg_id = result[i]->m_msg_id;
 
-                RpcDispatcher::GetRpcDispatcher()->dispatch(result[i], message, this);
+                // RpcDispatcher::GetRpcDispatcher()->dispatch(result[i], message, this);
             }
         }
         else
         {
             // 从 buffer 里 decode 得到 message 对象, 执行其回调
             std::vector<AbstractProtocol::s_ptr> result;
-            m_coder->decode(result, m_in_buffer);
+            m_codec->decode(result, m_in_buffer);
 
             for (size_t i = 0; i < result.size(); ++i)
             {
@@ -142,7 +201,7 @@ namespace minirpc
 
     void TcpConnection::reply(std::vector<AbstractProtocol::s_ptr> &replay_messages)
     {
-        m_coder->encode(replay_messages, m_out_buffer);
+        m_codec->encode(replay_messages, m_out_buffer);
         listenWrite();
     }
 
@@ -168,7 +227,7 @@ namespace minirpc
                 messages.push_back(m_write_dones[i].first);
             }
 
-            m_coder->encode(messages, m_out_buffer);
+            m_codec->encode(messages, m_out_buffer);
         }
 
         bool is_write_all = false;
@@ -214,7 +273,7 @@ namespace minirpc
             m_write_dones.clear();
         }
     }
-
+*/
     void TcpConnection::setState(const TcpState state)
     {
         m_state = Connected;
@@ -240,7 +299,7 @@ namespace minirpc
         m_state = Closed;
     }
 
-    void TcpConnection::shutdown()
+    void TcpConnection::shutdown() // 四次挥手
     {
         if (m_state == Closed || m_state == NotConnected)
         {

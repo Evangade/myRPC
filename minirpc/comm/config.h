@@ -3,16 +3,17 @@
 #include <map>
 #include <string>
 #include <tinyxml/tinyxml.h>
+#include "net_addr.h"
 namespace minirpc
 {
-    /*
+
     struct RpcStub
     {
         std::string name;
         NetAddr::s_ptr addr;
         int timeout{2000};
     };
-    */
+
     class Config
     {
     public:
@@ -38,7 +39,7 @@ namespace minirpc
 
         TiXmlDocument *m_xml_document{NULL};
 
-        // std::map<std::string, RpcStub> m_rpc_stubs;
+        std::map<std::string, RpcStub> m_rpc_stubs;
     };
 }
 

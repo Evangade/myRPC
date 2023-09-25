@@ -2,7 +2,7 @@
 #define MINIRPC_NET_TCP_TCP_ACCEPTOR_H
 
 #include <memory>
-#include "minirpc/net/tcp/net_addr.h"
+#include "minirpc/comm/net_addr.h"
 
 namespace minirpc
 {

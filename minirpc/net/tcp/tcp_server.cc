@@ -15,6 +15,16 @@ namespace minirpc
         INFOLOG("minirpc TcpServer listen sucess on [%s]", m_local_addr->toString().c_str());
     }
 
+    TcpServer::TcpServer(NetAddr::s_ptr local_addr, void (*RpcPointer)(AbstractProtocol::s_ptr, AbstractProtocol::s_ptr, TcpConnection *))
+        : m_local_addr(local_addr)
+    {
+        SetRpcDispacher(RpcPointer);
+
+        init();
+
+        INFOLOG("Minirpc TcpServer listen sucess on [%s]", m_local_addr->toString().c_str());
+    }
+
     TcpServer::~TcpServer()
     {
         if (m_main_event_loop)
@@ -63,7 +73,7 @@ namespace minirpc
         IOThread *io_thread = m_io_thread_group->getIOThread();
         TcpConnection::s_ptr connetion = std::make_shared<TcpConnection>(io_thread->getEventLoop(), client_fd, 128, peer_addr, m_local_addr);
         connetion->setState(Connected);
-
+        connetion->SetRpcDispacher_2(m_RpcPointer);
         m_client.insert(connetion);
 
         INFOLOG("TcpServer succ get client, fd=%d", client_fd);
@@ -73,6 +83,11 @@ namespace minirpc
     {
         m_io_thread_group->start();
         m_main_event_loop->loop();
+    }
+
+    void TcpServer::SetRpcDispacher(void (*RpcPointer)(AbstractProtocol::s_ptr, AbstractProtocol::s_ptr, TcpConnection *))
+    {
+        m_RpcPointer = RpcPointer;
     }
 
     void TcpServer::ClearClientTimerFunc()

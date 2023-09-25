@@ -1,0 +1,2 @@
+# 必须将host_cxxopt也设置
+build --cxxopt=-std=c++14 --host_cxxopt=-std=c++14

@@ -6,7 +6,7 @@
 #include "minirpc/net/eventloop.h"
 #include "minirpc/net/fd_event_group.h"
 #include "minirpc/net/tcp/tcp_client.h"
-#include "minirpc/net/tcp/net_addr.h"
+#include "minirpc/comm/net_addr.h"
 
 namespace minirpc
 {

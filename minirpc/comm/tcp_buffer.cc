@@ -119,5 +119,4 @@ namespace minirpc
         m_write_index = j;
         adjustBuffer();
     }
-
 }

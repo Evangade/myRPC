@@ -69,18 +69,20 @@ namespace minirpc
                 }
             }
 
+            // 缓冲区全部读取完毕，未找到开始符
             if (i >= buffer->writeIndex())
             {
                 DEBUGLOG("decode end, read all buffer data");
                 return;
             }
-
+            // 找到开始符
             if (parse_success)
             {
+                // 整包长度（包括开始符 结束符）
                 buffer->moveReadIndex(end_index - start_index + 1);
                 std::shared_ptr<TinyPBProtocol> message = std::make_shared<TinyPBProtocol>();
                 message->m_pk_len = pk_len;
-
+                // message_ID长度
                 int msg_id_len_index = start_index + sizeof(char) + sizeof(message->m_pk_len);
                 if (msg_id_len_index >= end_index)
                 {
@@ -92,12 +94,12 @@ namespace minirpc
                 DEBUGLOG("parse msg_id_len=%d", message->m_msg_id_len);
 
                 int msg_id_index = msg_id_len_index + sizeof(message->m_msg_id_len);
-
+                // message ID
                 char msg_id[100] = {0};
                 memcpy(&msg_id[0], &tmp[msg_id_index], message->m_msg_id_len);
                 message->m_msg_id = std::string(msg_id);
                 DEBUGLOG("parse msg_id=%s", message->m_msg_id.c_str());
-
+                // 方法名长度
                 int method_name_len_index = msg_id_index + message->m_msg_id_len;
                 if (method_name_len_index >= end_index)
                 {
@@ -106,13 +108,13 @@ namespace minirpc
                     continue;
                 }
                 message->m_method_name_len = getInt32FromNetByte(&tmp[method_name_len_index]);
-
+                // 方法名
                 int method_name_index = method_name_len_index + sizeof(message->m_method_name_len);
                 char method_name[512] = {0};
                 memcpy(&method_name[0], &tmp[method_name_index], message->m_method_name_len);
                 message->m_method_name = std::string(method_name);
                 DEBUGLOG("parse method_name=%s", message->m_method_name.c_str());
-
+                // 错误码
                 int err_code_index = method_name_index + message->m_method_name_len;
                 if (err_code_index >= end_index)
                 {
@@ -121,7 +123,7 @@ namespace minirpc
                     continue;
                 }
                 message->m_err_code = getInt32FromNetByte(&tmp[err_code_index]);
-
+                // 错误信息长度
                 int error_info_len_index = err_code_index + sizeof(message->m_err_code);
                 if (error_info_len_index >= end_index)
                 {
@@ -130,13 +132,13 @@ namespace minirpc
                     continue;
                 }
                 message->m_err_info_len = getInt32FromNetByte(&tmp[error_info_len_index]);
-
+                // 错误信息
                 int err_info_index = error_info_len_index + sizeof(message->m_err_info_len);
                 char error_info[512] = {0};
                 memcpy(&error_info[0], &tmp[err_info_index], message->m_err_info_len);
                 message->m_err_info = std::string(error_info);
                 DEBUGLOG("parse error_info=%s", message->m_err_info.c_str());
-
+                // protobuf序列化信息
                 int pb_data_len = message->m_pk_len - message->m_method_name_len - message->m_msg_id_len - message->m_err_info_len - 2 - 24;
 
                 int pd_data_index = err_info_index + message->m_err_info_len;

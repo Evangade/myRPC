@@ -15,10 +15,10 @@
 
   <stubs>
     <rpc_server>
-      <name></name>
-      <ip></ip>
-      <port></port>
-      <timeout></timeout>
+      <name>RPC_Config</name>
+      <ip>127.0.0.1</ip>
+      <port>12322</port>
+      <timeout>5000</timeout>
     </rpc_server> 
   </stubs>
 

@@ -2,7 +2,7 @@
 #define MINIRPC_NET_TCP_TCP_CLIENT_H
 
 #include <memory>
-#include "net_addr.h"
+#include "minirpc/comm/net_addr.h"
 #include "minirpc/net/eventloop.h"
 #include "minirpc/net/tcp/tcp_connection.h"
 #include "minirpc/net/codec/abstract_protocol.h"
@@ -20,7 +20,7 @@ namespace minirpc
 
         ~TcpClient();
 
-        // 异步的进行 conenct
+        // 异步的进行 connect
         // 如果 connect 完成，done 会被执行
         void connect(std::function<void()> done);
 

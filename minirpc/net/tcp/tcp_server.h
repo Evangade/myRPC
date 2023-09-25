@@ -4,7 +4,7 @@
 #include <set>
 #include "minirpc/net/tcp/tcp_accepter.h"
 #include "minirpc/net/tcp/tcp_connection.h"
-#include "minirpc/net/tcp/net_addr.h"
+#include "minirpc/comm/net_addr.h"
 #include "minirpc/net/eventloop.h"
 #include "minirpc/net/io_thread_group.h"
 
@@ -16,9 +16,14 @@ namespace minirpc
     public:
         TcpServer(NetAddr::s_ptr local_addr);
 
+        TcpServer(NetAddr::s_ptr local_addr, void (*RpcPointer)(AbstractProtocol::s_ptr, AbstractProtocol::s_ptr, TcpConnection *));
+
         ~TcpServer();
 
         void start();
+
+        // 为tcp_connection设置的RpcDispatcher
+        void SetRpcDispacher(void (*RpcPointer)(AbstractProtocol::s_ptr, AbstractProtocol::s_ptr, TcpConnection *));
 
     private:
         void init();
@@ -45,6 +50,8 @@ namespace minirpc
         std::set<TcpConnection::s_ptr> m_client;
 
         TimerEvent::s_ptr m_clear_client_timer_event;
+
+        void (*m_RpcPointer)(AbstractProtocol::s_ptr, AbstractProtocol::s_ptr, TcpConnection *);
     };
 
 }

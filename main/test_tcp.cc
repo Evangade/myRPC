@@ -1,7 +1,7 @@
 #include <memory>
 #include "minirpc/comm/log.h"
 #include "minirpc/comm/config.h"
-#include "minirpc/net/tcp/net_addr.h"
+#include "minirpc/comm/net_addr.h"
 #include "minirpc/net/tcp/tcp_server.h"
 
 void test_tcp_server()

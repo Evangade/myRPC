@@ -72,7 +72,7 @@ namespace minirpc
 
     int IPNetAddr::getFamily()
     {
-        return AF_INET;
+        return AF_INET; // PF_INET
     }
 
     std::string IPNetAddr::toString()

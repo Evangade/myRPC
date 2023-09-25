@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include "minirpc/comm/log.h"
-#include "minirpc/net/tcp/net_addr.h"
+#include "minirpc/comm/net_addr.h"
 #include "tcp_accepter.h"
 
 namespace minirpc
@@ -64,7 +64,7 @@ namespace minirpc
             memset(&client_addr, 0, sizeof(client_addr));
             socklen_t clien_addr_len = sizeof(clien_addr_len);
 
-            int client_fd = ::accept(m_listenfd, reinterpret_cast<sockaddr *>(&client_addr), &clien_addr_len);
+            int client_fd = ::accept(m_listenfd, reinterpret_cast<sockaddr *>(&client_addr), &clien_addr_len); // 创建套接字并连接到发起请求的客户端
             if (client_fd < 0)
             {
                 ERRORLOG("accept error, errno=%d, error=%s", errno, strerror(errno));

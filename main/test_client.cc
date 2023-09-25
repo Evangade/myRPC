@@ -55,19 +55,19 @@ void test_connect()
 void test_tcp_client()
 {
 
-  minirpc::IPNetAddr::s_ptr addr = std::make_shared<minirpc::IPNetAddr>("127.0.0.1", 12346);
+  minirpc::IPNetAddr::s_ptr addr = std::make_shared<minirpc::IPNetAddr>("127.0.0.1", 12321);
   minirpc::TcpClient client(addr);
   client.connect([addr, &client]()
                  {
     DEBUGLOG("conenct to [%s] success", addr->toString().c_str());
     std::shared_ptr<minirpc::TinyPBProtocol> message = std::make_shared<minirpc::TinyPBProtocol>();
-    message->m_msg_id = "123456789";
+    message->m_msg_id = "123456";
     message->m_pb_data = "test pb data";
     client.writeMessage(message, [](minirpc::AbstractProtocol::s_ptr msg_ptr) {
       DEBUGLOG("send message success");
     });
 
-    client.readMessage("123456789", [](minirpc::AbstractProtocol::s_ptr msg_ptr) {
+    client.readMessage("123456", [](minirpc::AbstractProtocol::s_ptr msg_ptr) {
       std::shared_ptr<minirpc::TinyPBProtocol> message = std::dynamic_pointer_cast<minirpc::TinyPBProtocol>(msg_ptr);
       DEBUGLOG("msg_id[%s], get response %s", message->m_msg_id.c_str(), message->m_pb_data.c_str());
     }); });
@@ -80,9 +80,9 @@ int main()
 
   minirpc::Logger::InitGlobalLogger();
 
-  test_connect();
+  // test_connect();
 
-  // test_tcp_client();
+  test_tcp_client();
 
   return 0;
 }

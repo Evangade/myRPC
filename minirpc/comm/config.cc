@@ -90,23 +90,23 @@ namespace minirpc
         m_io_threads = std::atoi(io_threads_str.c_str());
 
         TiXmlElement *stubs_node = root_node->FirstChildElement("stubs");
-        /*
-                if (stubs_node)
-                {
-                    for (TiXmlElement *node = stubs_node->FirstChildElement("rpc_server"); node; node = node->NextSiblingElement("rpc_server"))
-                    {
-                        RpcStub stub;
-                        stub.name = std::string(node->FirstChildElement("name")->GetText());
-                        stub.timeout = std::atoi(node->FirstChildElement("timeout")->GetText());
 
-                        std::string ip = std::string(node->FirstChildElement("ip")->GetText());
-                        uint16_t port = std::atoi(node->FirstChildElement("port")->GetText());
-                        stub.addr = std::make_shared<IPNetAddr>(ip, port);
+        if (stubs_node)
+        {
+            for (TiXmlElement *node = stubs_node->FirstChildElement("rpc_server"); node; node = node->NextSiblingElement("rpc_server"))
+            {
+                RpcStub stub;
+                stub.name = std::string(node->FirstChildElement("name")->GetText());
+                stub.timeout = std::atoi(node->FirstChildElement("timeout")->GetText());
 
-                        m_rpc_stubs.insert(std::make_pair(stub.name, stub));
-                    }
-                }
-        */
+                std::string ip = std::string(node->FirstChildElement("ip")->GetText());
+                uint16_t port = std::atoi(node->FirstChildElement("port")->GetText());
+                stub.addr = std::make_shared<IPNetAddr>(ip, port);
+
+                m_rpc_stubs.insert(std::make_pair(stub.name, stub));
+            }
+        }
+
         printf("Server -- PORT[%d], IO Threads[%d]\n", m_port, m_io_threads);
     }
 }

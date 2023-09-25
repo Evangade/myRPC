@@ -1,66 +1,55 @@
-#include "minirpc/comm/log.h"
-#include <functional>
-#include <iostream>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 using namespace std;
-class FooBar
+void error_handling(string message);
+
+int main(int argc, char *argv[])
 {
-private:
-    int n;
-    condition_variable cv;
-    mutex mut;
-    bool turn = false;
 
-public:
-    FooBar(int n)
+    int serv_sock;
+    int clnt_sock;
+    struct sockaddr_in serv_addr;
+    struct sockaddr_in clnt_addr;
+    socklen_t clnt_addr_size;
+
+    char message[] = "Hello World!!!";
+
+    if (argc != 2)
     {
-        this->n = n;
+        printf("Usage :%s <port>\n", argv[0]);
+        exit(1);
     }
+    serv_sock = socket(PF_INET, SOCK_STREAM, 0);
+    if (serv_sock == -1)
+        error_handling("socket error");
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serv_addr.sin_port = htons(atoi(argv[1]));
 
-    void foo(function<void()> printFoo)
-    {
+    if (bind(serv_sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == -1)
+        error_handling("bind() error");
 
-        for (int i = 0; i < n; i++)
-        {
-            unique_lock<mutex> lk(mut);
-            cv.wait(lk, [&]
-                    { return !turn; });
-            // printFoo() outputs "foo". Do not change or remove this line.
-            printFoo();
-            turn = true;
-            lk.unlock();
-            cv.notify_one();
-        }
-    }
+    if (listen(serv_sock, 5) == -1)
+        error_handling("listen() error");
 
-    void bar(function<void()> printBar)
-    {
-
-        for (int i = 0; i < n; i++)
-        {
-            unique_lock<mutex> lk(mut);
-            cv.wait(lk, [&]
-                    { return turn; });
-            // printBar() outputs "bar". Do not change or remove this line.
-            printBar();
-            turn = false;
-            lk.unlock();
-            cv.notify_one();
-        }
-    }
-};
-int main()
-{
-    int n = 3;
-    FooBar s(n);
-    cout << "out:\n";
-    thread t1(&FooBar::foo, &s, []
-              { cout << "foo"; });
-    thread t2(&FooBar::bar, &s, []
-              { cout << "bar"; });
-    t1.join();
-    t2.join();
+    clnt_addr_size = sizeof(clnt_addr);
+    clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_addr, &clnt_addr_size);
+    if (clnt_sock == -1)
+        error_handling("accept() error");
+    write(clnt_sock, message, sizeof(message));
+    close(clnt_sock);
+    close(serv_sock);
     return 0;
+}
+void error_handling(string message)
+{
+    fputs(message.c_str(), stderr);
+    fputc('\n', stderr);
+    exit(1);
 }

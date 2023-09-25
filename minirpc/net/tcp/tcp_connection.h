@@ -4,12 +4,11 @@
 #include <memory>
 #include <map>
 #include <queue>
-#include "minirpc/net/tcp/net_addr.h"
+#include "minirpc/comm/net_addr.h"
 #include "minirpc/comm/tcp_buffer.h"
 #include "minirpc/net/io_thread.h"
 #include "minirpc/net/eventloop.h"
 #include "minirpc/net/codec/abstract_codec.h"
-// #include "minirpc/net/rpc/rpc_dispatcher.h"
 
 namespace minirpc
 {
@@ -25,7 +24,7 @@ namespace minirpc
     enum TcpConnectionType
     {
         TcpConnectionByServer = 1, // 作为服务端使用，代表跟对端客户端的连接
-        TcpConnectionByClient = 2, // 作为客户端使用，代表跟对赌服务端的连接
+        TcpConnectionByClient = 2, // 作为客户端使用，代表跟对端服务端的连接
     };
 
     class TcpConnection
@@ -73,6 +72,8 @@ namespace minirpc
 
         void reply(std::vector<AbstractProtocol::s_ptr> &replay_messages);
 
+        void SetRpcDispacher_2(void (*RpcPointer)(AbstractProtocol::s_ptr, AbstractProtocol::s_ptr, TcpConnection *));
+
     private:
         EventLoop *m_event_loop{NULL}; // 代表持有该连接的 IO 线程
 
@@ -96,6 +97,8 @@ namespace minirpc
 
         // key 为 msg_id
         std::map<std::string, std::function<void(AbstractProtocol::s_ptr)>> m_read_dones;
+
+        void (*m_RpcPointer)(AbstractProtocol::s_ptr, AbstractProtocol::s_ptr, TcpConnection *); // 指向dispatch函数
     };
 
 }
